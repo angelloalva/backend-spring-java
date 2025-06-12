@@ -1,0 +1,12 @@
+spring:
+  data:
+    mongodb:
+      #host: mongo
+      host: localhost
+      port: 27017
+      database: neuromotionbd
+      username: neuromotionUser
+      password: TuPasswordSeguro123
+
+jwt:
+  secret: estaEsUnaClaveMuySeguraDeAlMenos32Chars1234567890
