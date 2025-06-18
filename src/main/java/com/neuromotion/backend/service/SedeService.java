@@ -23,17 +23,19 @@ public class SedeService {
     private final SedeRepository sedeRepository;
 
     // Crear una nueva sede a partir de un DTO de creación
-    public ResponseEntity<MensajeResponse> crearSede(SedeRequest request) {
+    public ResponseEntity<?> crearSede(SedeRequest request) {
         try {
             Sede sede = new Sede();
             sede.setNombre(request.getNombre());
             sede.setDireccion(request.getDireccion());
             sede = sedeRepository.save(sede);
-            return ResponseEntity.status(HttpStatus.CREATED).body(new MensajeResponse("Sede creado"));
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(sede);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MensajeResponse("Error al crear sede"));
-        
+         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new MensajeResponse("Error al crear la sede: " + e.getMessage()));
         }
+     
        
     }
 
@@ -53,19 +55,27 @@ public class SedeService {
     }
 
     // Actualizar una sede parcialmente
-    public ResponseEntity<MensajeResponse> actualizarSede(String id, SedeRequest request) {
-        Sede sede = sedeRepository.findById(id)
-                .orElseThrow(() -> new DocumentoNoEncontradoException("Sede no encontrada con ID: " + id));
+   public ResponseEntity<?> actualizarSede(String id, SedeRequest request) {
+    try {
+        Sede sedeExistente = sedeRepository.findById(id)
+            .orElseThrow(() -> new DocumentoNoEncontradoException("Sede no encontrada con ID: " + id));
+
         if (request.getNombre() != null) {
-            sede.setNombre(request.getNombre());
+            sedeExistente.setNombre(request.getNombre());
         }
         if (request.getDireccion() != null) {
-            sede.setDireccion(request.getDireccion());
+            sedeExistente.setDireccion(request.getDireccion());
         }
-        sede = sedeRepository.save(sede);
-       // return new SedeResponse(sede.getId(), sede.getNombre(), sede.getDireccion());
-       return ResponseEntity.ok(new MensajeResponse("Actualizado con éxito"));
+        sedeRepository.save(sedeExistente);
+        return ResponseEntity.ok(sedeExistente);
+    } catch (DocumentoNoEncontradoException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(new MensajeResponse(e.getMessage()));
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(new MensajeResponse("Error al actualizar la sede: " + e.getMessage()));
     }
+}
 
     // Eliminar una sede por ID
     public void eliminarSede(String id) {

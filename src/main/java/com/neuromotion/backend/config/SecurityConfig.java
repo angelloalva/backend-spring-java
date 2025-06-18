@@ -41,6 +41,7 @@ public class SecurityConfig {
                   .requestMatchers(HttpMethod.POST, "/especialidades/**").hasAnyRole("ADMIN", "DOCTOR")
                   .requestMatchers(HttpMethod.GET, "/sedes/**").hasAnyRole("ADMIN", "DOCTOR", "PACIENTE")
                   .requestMatchers(HttpMethod.POST, "/sedes/**").hasAnyRole("ADMIN")
+                  .requestMatchers(HttpMethod.POST, "/turnos/**").hasAnyRole("ADMIN", "DOCTOR")
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

@@ -12,7 +12,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import com.neuromotion.backend.dto.DoctorCreateRequest;
 import com.neuromotion.backend.dto.MensajeResponse;
+import com.neuromotion.backend.dto.RegistroDoctorRequest;
 import com.neuromotion.backend.dto.RegistroRequest;
 import com.neuromotion.backend.dto.UsuarioPasswordChangeRequest;
 import com.neuromotion.backend.dto.UsuarioUpdateRequest;
@@ -33,7 +36,7 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final SecurityUtils authUtils;
-
+    private final DoctorService doctorService;
     public List<Usuario> listarUsuarios() {
         return usuarioRepository.findAll();
     }
@@ -91,10 +94,13 @@ public class UsuarioService {
         return ResponseEntity.noContent().build();
     }
 
-    public ResponseEntity<?> crearUsuario(RegistroRequest usuarioDto, Authentication authentication) {
+    public ResponseEntity<?> crearUsuario(RegistroDoctorRequest request, Authentication authentication) {
         try {
             logger.info("Intento de creación de usuario por: {}", authentication.getName());
             logger.info("Roles del creador: {}", authentication.getAuthorities());
+
+            RegistroRequest usuarioDto = request.getUsuario();
+            DoctorCreateRequest doctorDto = request.getDoctor();
 
             if (usuarioRepository.findByTipoDocumentoAndNumeroDocumento(usuarioDto.getDocumentoTipo(), usuarioDto.getDocumentoNumero()).isPresent()) {
                 throw new DuplicateResourceException("Usuario ya existe");
@@ -104,9 +110,11 @@ public class UsuarioService {
             Set<Rol> rolesPermitidos = new HashSet<>();
             if (rolesDelCreador.contains(Rol.ADMIN)) {
                 rolesPermitidos.addAll(List.of(Rol.ADMIN, Rol.DOCTOR, Rol.PACIENTE));
-            } else if (rolesDelCreador.contains(Rol.DOCTOR)) {
-                rolesPermitidos.add(Rol.PACIENTE);
             }
+            /* else if (rolesDelCreador.contains(Rol.DOCTOR)) {
+                rolesPermitidos.add(Rol.PACIENTE);
+            } */
+             
 
             if (usuarioDto.getRoles() == null || usuarioDto.getRoles().isEmpty()) {
                 return ResponseEntity.badRequest().body(new MensajeResponse("Debe asignar al menos un rol"));
@@ -134,6 +142,19 @@ public class UsuarioService {
             nuevo.setRoles(usuarioDto.getRoles());
 
             usuarioRepository.save(nuevo);
+
+            // Si el usuario tiene el rol DOCTOR y se envió info de doctor, crear también el documento en la colección doctores
+            if (usuarioDto.getRoles().contains(Rol.DOCTOR) && doctorDto != null) {
+                DoctorCreateRequest doctorRequest = new DoctorCreateRequest(
+                    nuevo.getId(),
+                    doctorDto.getCmp(),
+                    doctorDto.getEspecialidadId(),
+                    doctorDto.getSedeIds(),
+                    doctorDto.getFotoUrl()
+                );
+                doctorService.crearDoctor(doctorRequest);
+            }
+
             return ResponseEntity.status(HttpStatus.CREATED).body(new MensajeResponse("Usuario creado"));
         } catch (Exception e) {
             logger.error("Error al crear usuario", e);

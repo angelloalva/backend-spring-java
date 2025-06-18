@@ -96,4 +96,12 @@ public class ValidationExceptionHandler {
         ErrorResponseDTO errorResponse = new ErrorResponseDTO(ex.getMessage(), ex.getStatus());
         return new ResponseEntity<>(errorResponse, HttpStatus.valueOf(ex.getStatus()));
     }
+
+    @ExceptionHandler(HorarioNoDisponibleException.class)
+    public ResponseEntity<?> handleHorarioNoDisponible(HorarioNoDisponibleException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("error", ex.getMessage());
+        body.put("horariosDisponibles", ex.getHorariosDisponibles());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
 }

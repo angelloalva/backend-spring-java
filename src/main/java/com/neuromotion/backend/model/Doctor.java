@@ -15,12 +15,10 @@ public class Doctor {
     @Id
     private String id;
 
-    private String nombres;
-    private String apellidos;
+    private String usuarioId;         // Referencia al usuario
     private String cmp;
-    private String especialidad;
-    private String sedeId; // Referencia al id de la sede
-
-    private String fotoUrl; // ruta o URL de la imagen
+    private String especialidadId;    // Referencia a la especialidad
+    private List<String> sedeIds;     // Lista de sedes donde trabaja
+    private String fotoUrl;           // URL o ruta de la foto
 
 }

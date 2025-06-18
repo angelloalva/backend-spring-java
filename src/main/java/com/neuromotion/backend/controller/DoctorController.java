@@ -21,7 +21,7 @@ import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
-@RequestMapping("/doctores")
+@RequestMapping("/api/doctores")
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'PACIENTE')")
 public class DoctorController {
@@ -32,7 +32,7 @@ public class DoctorController {
     private final TurnoService turnoService;
     
     // Crear doctor (solo ADMIN)
-    @PostMapping
+    /*@PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DoctorResponse> crearDoctor(@Valid @RequestBody DoctorCreateRequest request) {
         try {
@@ -41,7 +41,7 @@ public class DoctorController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
         }
-    }
+    }*/
     
     // Obtener todos los doctores
     @GetMapping

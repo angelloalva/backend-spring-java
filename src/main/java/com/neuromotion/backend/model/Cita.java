@@ -9,6 +9,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.neuromotion.backend.enums.EstadoCita;
 
 
 @Data
@@ -22,11 +23,11 @@ public class Cita {
     private String doctorId;       // Referencia al doctor
     private String sedeId;         // Referencia a la sede donde se hará la cita
     @JsonFormat(shape=JsonFormat.Shape.STRING,pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private OffsetDateTime  fechaHora;  // Fecha y hora de la cita
+    private LocalDateTime  fechaHora;  // Fecha y hora de la cita
 
     private String turnoId;        // Opcional, si quieres referenciar el turno asignado
 
-    private String estado;         // Estado de la cita (e.g. PENDIENTE, CONFIRMADA, CANCELADA)
+    private EstadoCita estado;         // Estado de la cita (e.g. PENDIENTE, CONFIRMADA, CANCELADA)
 
     private String observaciones;  // Campo para notas adicionales
 }

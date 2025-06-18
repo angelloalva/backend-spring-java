@@ -11,12 +11,11 @@ import com.neuromotion.backend.model.Doctor;
 public interface DoctorRepository  extends MongoRepository<Doctor, String> {
     // Búsquedas básicas
     Optional<Doctor> findByCmp(String cmp);
-    List<Doctor> findByEspecialidad(String especialidad);
-    List<Doctor> findBySedeId(String sedeId);
-    List<Doctor> findByEspecialidadAndSedeId(String especialidad, String sedeId);
-    
-    // Búsquedas por nombre (case insensitive)
-    List<Doctor> findByNombresContainingIgnoreCase(String nombres);
+    List<Doctor> findBySedeIdsContaining(String sedeId);
+    List<Doctor> findByEspecialidadId(String especialidadId);
+    List<Doctor> findByUsuarioIdIn(List<String> usuarioIds);
+    List<Doctor> findByEspecialidadIdAndSedeIdsContaining(String especialidadId, String sedeId);
+
     
     // Verificar existencia
     boolean existsByCmp(String cmp);
@@ -24,4 +23,5 @@ public interface DoctorRepository  extends MongoRepository<Doctor, String> {
     // Consultas personalizadas
     @Query("{ 'especialidad': ?0, 'turnos': { $exists: true, $not: { $size: 0 } } }")
     List<Doctor> findByEspecialidadWithTurnos(String especialidad);
+    boolean existsByUsuarioId(String usuarioId);
 }

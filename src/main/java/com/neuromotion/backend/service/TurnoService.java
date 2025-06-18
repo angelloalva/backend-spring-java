@@ -27,6 +27,13 @@ public class TurnoService {
 
  // ================= CREAR TURNO =================
     public Turno crearTurno(Turno nuevoTurno) {
+        if (nuevoTurno.getDoctorId() == null || nuevoTurno.getEspecialidadId() == null ||
+            nuevoTurno.getSedeId() == null || nuevoTurno.getDiasDisponibles() == null ||
+            nuevoTurno.getDiasDisponibles().isEmpty()) {
+            throw new IllegalArgumentException("Faltan datos obligatorios para crear el turno");
+        }
+        log.info("Creando turno para doctor {} en sede {} y especialidad {}", 
+                nuevoTurno.getDoctorId(), nuevoTurno.getSedeId(), nuevoTurno.getEspecialidadId());
         // Validar que las fechas correspondan con los días
         validarConsistenciaFechasDias(nuevoTurno);
         
@@ -330,7 +337,7 @@ public class TurnoService {
     }
     
     private void validarConsistenciaFechaDia(Turno.DiaTurno dia) {
-        DiaSemana diaCalculado = DiaSemana.valueOf(dia.getFecha().getDayOfWeek().name());
+        DiaSemana diaCalculado = DiaSemana.fromJavaDayOfWeek(dia.getFecha().getDayOfWeek());
         if (!dia.getDia().equals(diaCalculado)) {
             throw new IllegalArgumentException(
                 String.format("La fecha %s no corresponde al día %s", 

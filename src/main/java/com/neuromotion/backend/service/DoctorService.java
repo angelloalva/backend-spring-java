@@ -7,10 +7,14 @@ import com.neuromotion.backend.dto.DoctorCreateRequest;
 import com.neuromotion.backend.dto.DoctorResponse;
 import com.neuromotion.backend.dto.DoctorUpdateRequest;
 import com.neuromotion.backend.dto.EspecialidadValidationResponse;
+import com.neuromotion.backend.enums.Rol;
 import com.neuromotion.backend.model.Doctor;
 import com.neuromotion.backend.model.Especialidad;
+
 import com.neuromotion.backend.model.Turno;
+import com.neuromotion.backend.model.Usuario;
 import com.neuromotion.backend.repository.DoctorRepository;
+import com.neuromotion.backend.repository.UsuarioRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,6 +31,7 @@ public class DoctorService {
     private final DoctorRepository doctorRepository;
     
     private final TurnoService turnoService;
+    private final UsuarioRepository usuarioRepository;
     
     private final EspecialidadService especialidadService;
     
@@ -102,32 +107,39 @@ public class DoctorService {
     }
     // Crear doctor
     public DoctorResponse crearDoctor(DoctorCreateRequest request) {
-      // Validar que no exista un doctor con el mismo CMP
+        // Validar que el usuario exista
+        Optional<Usuario> usuarioOpt = usuarioRepository.findById(request.getUsuarioId());
+        if (usuarioOpt.isEmpty()) {
+            throw new IllegalArgumentException("No existe un usuario con el ID: " + request.getUsuarioId());
+        }
+
+        // Validar que no exista un doctor con el mismo CMP
         if (doctorRepository.existsByCmp(request.getCmp())) {
             throw new IllegalArgumentException("Ya existe un doctor con el CMP: " + request.getCmp());
         }
-        
-        // Validar especialidad - debe existir previamente
-        if (request.getEspecialidad() != null && !request.getEspecialidad().trim().isEmpty()) {
-            EspecialidadValidationResponse validacion = validarEspecialidad(request.getEspecialidad());
-            if (!validacion.isExists()) {
-                throw new IllegalArgumentException(
-                    "La especialidad '" + request.getEspecialidad() + "' no existe. " +
-                    "Debe crearla primero o usar una existente."
-                );
-            }
-            // Usar el nombre exacto de la especialidad encontrada para consistencia
-            request.setEspecialidad(validacion.getEspecialidadEncontrada().getNombre());
+
+        // Validar que no exista ya un doctor vinculado a ese usuario
+        if (doctorRepository.existsByUsuarioId(request.getUsuarioId())) {
+            throw new IllegalArgumentException("Ya existe un doctor vinculado a este usuario.");
         }
+
+        // Validar especialidad
+        if (request.getEspecialidadId() == null || request.getEspecialidadId().trim().isEmpty()) {
+            throw new IllegalArgumentException("La especialidad es obligatoria.");
+        }
+        Optional<Especialidad> especialidadOpt = especialidadService.buscarPorId(request.getEspecialidadId());
+        if (especialidadOpt.isEmpty()) {
+            throw new IllegalArgumentException("La especialidad indicada no existe.");
+        }
+
+        // Crear el doctor solo con los campos obligatorios
         Doctor doctor = new Doctor();
-        doctor.setNombres(request.getNombres());
-        doctor.setApellidos(request.getApellidos());
+        doctor.setUsuarioId(request.getUsuarioId());
         doctor.setCmp(request.getCmp());
-        doctor.setEspecialidad(request.getEspecialidad());
-        doctor.setSedeId(request.getSedeId());
-        doctor.setFotoUrl(request.getFotoUrl());
-      
-        
+        doctor.setEspecialidadId(request.getEspecialidadId());
+        doctor.setSedeIds(request.getSedeIds() != null ? request.getSedeIds() : new ArrayList<>());
+        doctor.setFotoUrl(request.getFotoUrl()); // Puede ser null
+
         Doctor doctorGuardado = doctorRepository.save(doctor);
         return DoctorResponse.fromDoctor(doctorGuardado);
     }
@@ -152,22 +164,61 @@ public class DoctorService {
     }
     
     // Obtener doctores por especialidad
-    public List<DoctorResponse> obtenerDoctoresPorEspecialidad(String especialidad) {
-        return doctorRepository.findByEspecialidad(especialidad).stream()
+    public List<DoctorResponse> obtenerDoctoresPorEspecialidad(String especialidadId) {
+        return doctorRepository.findByEspecialidadId(especialidadId).stream()
                 .map(DoctorResponse::fromDoctor)
                 .collect(Collectors.toList());
     }
     
     // Obtener doctores por sede
     public List<DoctorResponse> obtenerDoctoresPorSede(String sedeId) {
-        return doctorRepository.findBySedeId(sedeId).stream()
+        return doctorRepository.findBySedeIdsContaining(sedeId).stream()
                 .map(DoctorResponse::fromDoctor)
                 .collect(Collectors.toList());
     }
     
     // Buscar doctores por nombre
     public List<DoctorResponse> buscarDoctoresPorNombre(String nombre) {
-        return doctorRepository.findByNombresContainingIgnoreCase(nombre).stream()
+        // 1. Buscar usuarios con rol DOCTOR y nombre que coincida (ignorar mayúsculas)
+        List<Usuario> usuarios = usuarioRepository.findByNombresContainingIgnoreCaseAndRolesContaining(nombre, Rol.DOCTOR);
+
+        // 2. Obtener los IDs de usuario
+        List<String> usuarioIds = usuarios.stream()
+                .map(Usuario::getId)
+                .collect(Collectors.toList());
+
+        if (usuarioIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // 3. Buscar doctores cuyo usuarioId esté en la lista
+        List<Doctor> doctores = doctorRepository.findByUsuarioIdIn(usuarioIds);
+
+        // 4. Mapear a DoctorResponse
+        return doctores.stream()
+                .map(DoctorResponse::fromDoctor)
+                .collect(Collectors.toList());
+    }
+    
+    // Buscar doctores por nombre y rol
+    public List<DoctorResponse> buscarDoctoresPorNombreYRol(String nombre, Rol rol) {
+        // Buscar usuarios con el nombre y rol especificados
+        List<Usuario> usuarios = usuarioRepository.findByNombresContainingIgnoreCaseAndRolesContaining(nombre, rol);
+
+        // Obtener los IDs de usuario
+        List<String> usuarioIds = usuarios.stream()
+                .map(Usuario::getId)
+                .collect(Collectors.toList());
+
+        if (usuarioIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // Buscar doctores cuyo usuarioId esté en la lista
+        List<Doctor> doctores = doctorRepository.findByUsuarioIdIn(usuarioIds);
+
+        // Mapear a DoctorResponse
+        return doctores.stream()
                 .map(DoctorResponse::fromDoctor)
                 .collect(Collectors.toList());
     }
@@ -175,30 +226,31 @@ public class DoctorService {
     // Actualizar doctor
     public Optional<DoctorResponse> actualizarDoctor(String id, DoctorUpdateRequest request) {
         return doctorRepository.findById(id).map(doctor -> {
-            if (request.getNombres() != null) {
-                doctor.setNombres(request.getNombres());
-            }
-            if (request.getApellidos() != null) {
-                doctor.setApellidos(request.getApellidos());
-            }
-            if (request.getEspecialidad() != null) {
-                // Validar la nueva especialidad
-                EspecialidadValidationResponse validacion = validarEspecialidad(request.getEspecialidad());
-                if (!validacion.isExists()) {
-                    throw new IllegalArgumentException(
-                        "La especialidad '" + request.getEspecialidad() + "' no existe. " +
-                        "Debe crearla primero o usar una existente."
-                    );
+            // Actualizar CMP si se envía y es diferente
+            if (request.getCmp() != null && !request.getCmp().equals(doctor.getCmp())) {
+                // Validar que no exista otro doctor con el mismo CMP
+                if (doctorRepository.existsByCmp(request.getCmp())) {
+                    throw new IllegalArgumentException("Ya existe un doctor con el CMP: " + request.getCmp());
                 }
-                doctor.setEspecialidad(validacion.getEspecialidadEncontrada().getNombre());
+                doctor.setCmp(request.getCmp());
             }
-            if (request.getSedeId() != null) {
-                doctor.setSedeId(request.getSedeId());
+            // Actualizar especialidadId si se envía
+            if (request.getEspecialidadId() != null) {
+                Optional<Especialidad> especialidadOpt = especialidadService.buscarPorId(request.getEspecialidadId());
+                if (especialidadOpt.isEmpty()) {
+                    throw new IllegalArgumentException("La especialidad indicada no existe.");
+                }
+                doctor.setEspecialidadId(request.getEspecialidadId());
             }
+            // Actualizar sedes si se envía
+            if (request.getSedeIds() != null) {
+                doctor.setSedeIds(request.getSedeIds());
+            }
+            // Actualizar foto si se envía
             if (request.getFotoUrl() != null) {
                 doctor.setFotoUrl(request.getFotoUrl());
             }
-            
+
             Doctor doctorActualizado = doctorRepository.save(doctor);
             return DoctorResponse.fromDoctor(doctorActualizado);
         });

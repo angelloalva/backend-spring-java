@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import com.neuromotion.backend.model.Cita;
 
 public interface CitaRepository extends MongoRepository<Cita, String> {
-    boolean existsByDoctorIdAndFechaHora(String doctorId, OffsetDateTime fechaHora);
+    boolean existsByDoctorIdAndFechaHora(String doctorId, LocalDateTime fechaHora);
     List<Cita> findByPacienteId(String pacienteId);
     List<Cita> findByDoctorId(String doctorId);
     List<Cita> findBySedeId(String sedeId);

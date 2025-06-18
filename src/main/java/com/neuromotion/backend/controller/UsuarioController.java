@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import com.neuromotion.backend.dto.RegistroDoctorRequest;
 import com.neuromotion.backend.dto.RegistroRequest;
 import com.neuromotion.backend.dto.UsuarioPasswordChangeRequest;
 import com.neuromotion.backend.dto.UsuarioUpdateRequest;
@@ -49,8 +51,8 @@ public class UsuarioController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR')")
-    public ResponseEntity<?> crearUsuario(@Valid @RequestBody RegistroRequest usuarioDto, Authentication authentication) {
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    public ResponseEntity<?> crearUsuario(@Valid @RequestBody RegistroDoctorRequest usuarioDto, Authentication authentication) {
        return usuarioService.crearUsuario(usuarioDto, authentication);
     }
 

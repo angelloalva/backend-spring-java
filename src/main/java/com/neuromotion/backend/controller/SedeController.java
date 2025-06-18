@@ -54,8 +54,7 @@ public class SedeController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<?> actualizarSede(@PathVariable String id, @RequestBody SedeRequest request) {
-            sedeService.actualizarSede(id, request);
-            return ResponseEntity.ok(new MensajeResponse("Actualizado con éxito"));
+           return sedeService.actualizarSede(id, request);
         
     }
 
