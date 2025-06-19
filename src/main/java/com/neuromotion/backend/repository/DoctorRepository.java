@@ -15,8 +15,9 @@ public interface DoctorRepository  extends MongoRepository<Doctor, String> {
     List<Doctor> findByEspecialidadId(String especialidadId);
     List<Doctor> findByUsuarioIdIn(List<String> usuarioIds);
     List<Doctor> findByEspecialidadIdAndSedeIdsContaining(String especialidadId, String sedeId);
+    List<Doctor> findByUsuarioId(String usuarioId);
+    Optional<Doctor> findById(String id);
 
-    
     // Verificar existencia
     boolean existsByCmp(String cmp);
     

@@ -19,9 +19,10 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secretKey;
 
-    public String generateToken(UserDetails userDetails) {
+    public String generateToken(UserDetails userDetails, String usuarioId) {
         return Jwts.builder()
             .setSubject(userDetails.getUsername())
+            .claim("usuarioId", usuarioId) // <-- claim personalizado
             .claim("roles", userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
             .setIssuedAt(new Date())
@@ -34,7 +35,14 @@ public class JwtUtil {
         final String username = extractUsername(token);
         return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
     }
-
+    public String extractUsuarioId(String token) {
+        return Jwts.parserBuilder()
+            .setSigningKey(secretKey.getBytes())
+            .build()
+            .parseClaimsJws(token)
+            .getBody()
+            .get("usuarioId", String.class);
+    }
     public String extractUsername(String token) {
         return Jwts.parserBuilder()
             .setSigningKey(secretKey.getBytes())

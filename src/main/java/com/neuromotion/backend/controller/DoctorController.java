@@ -2,16 +2,21 @@ package com.neuromotion.backend.controller;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.neuromotion.backend.dto.DoctorCreateRequest;
 import com.neuromotion.backend.dto.DoctorResponse;
 import com.neuromotion.backend.dto.DoctorUpdateRequest;
+import com.neuromotion.backend.enums.Rol;
+import com.neuromotion.backend.model.Cita;
 import com.neuromotion.backend.model.Doctor;
 import com.neuromotion.backend.model.Turno;
+import com.neuromotion.backend.model.Usuario;
 import com.neuromotion.backend.repository.DoctorRepository;
 import com.neuromotion.backend.service.DoctorService;
 import com.neuromotion.backend.service.TurnoService;
@@ -19,6 +24,9 @@ import com.neuromotion.backend.service.TurnoService;
 import jakarta.validation.Valid;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/doctores")
@@ -117,5 +125,18 @@ public class DoctorController {
                     return ResponseEntity.ok(turnos);
                 })
                 .orElse(ResponseEntity.notFound().build());
+    }
+    @GetMapping("/mis-pacientes")
+    @PreAuthorize("hasRole('DOCTOR')")
+    public ResponseEntity<List<Usuario>> obtenerMiUsuarioId(Authentication authentication) {
+        Object detailsObj = authentication.getDetails();
+        String usuarioId = null;
+        if (detailsObj instanceof Map<?, ?> details) {
+            usuarioId = (String) details.get("usuarioId");
+        }
+        if (usuarioId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No se pudo obtener el usuarioId");
+        }
+        return ResponseEntity.ok(doctorService.obtenerPacientesDeDoctor(usuarioId));
     }
 }

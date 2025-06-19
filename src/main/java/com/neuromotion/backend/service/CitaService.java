@@ -4,15 +4,20 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.neuromotion.backend.dto.CitaResponse;
 import com.neuromotion.backend.exceptions.HorarioNoDisponibleException;
 import com.neuromotion.backend.model.Cita;
 import com.neuromotion.backend.model.Turno;
+import com.neuromotion.backend.model.Usuario;
 import com.neuromotion.backend.repository.CitaRepository;
 import com.neuromotion.backend.repository.TurnoRepository;
+import com.neuromotion.backend.repository.UsuarioRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +29,7 @@ public class CitaService {
 
  private final TurnoRepository turnoRepository;
     private final CitaRepository citaRepository;
-
+private final UsuarioRepository userRepository;
     public Cita crearCita(Cita cita) {
         if (!estaDisponible(cita.getDoctorId(), cita.getSedeId(), cita.getFechaHora())) {
             List<LocalDateTime> horarios = obtenerHorariosDisponibles(
@@ -107,8 +112,14 @@ public class CitaService {
         return citaRepository.findById(id);
     }
 
-    public List<Cita> listarPorPaciente(String pacienteId) {
-        return citaRepository.findByPacienteId(pacienteId);
+   public List<CitaResponse> obtenerCitasPorPaciente(String pacienteId) {
+        List<Cita> citas = citaRepository.findByPacienteId(pacienteId);
+        Map<String, Usuario> usersMap = userRepository.findAll().stream()
+                .collect(Collectors.toMap(Usuario::getId, user -> user));
+
+        return citas.stream()
+                .map(cita -> CitaResponse.fromCita(cita, usersMap.get(cita.getDoctorId())))
+                .collect(Collectors.toList());
     }
 
     public List<Cita> listarPorDoctor(String doctorId) {

@@ -13,6 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 public class DoctorResponse {
     private String id;
+    private String usuarioId;
     private String cmp;
     private String especialidadId;
     private List<String> sedeIds;
@@ -21,6 +22,7 @@ public class DoctorResponse {
     public static DoctorResponse fromDoctor(Doctor doctor) {
         DoctorResponse response = new DoctorResponse();
         response.setId(doctor.getId());
+        response.setUsuarioId(doctor.getUsuarioId());
         response.setCmp(doctor.getCmp());
         response.setEspecialidadId(doctor.getEspecialidadId());
         response.setSedeIds(doctor.getSedeIds());

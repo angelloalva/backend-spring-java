@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.neuromotion.backend.dto.TurnoResponse;
+import com.neuromotion.backend.model.Especialidad;
 import com.neuromotion.backend.model.Turno;
 import com.neuromotion.backend.service.TurnoService;
 
@@ -26,6 +28,19 @@ import lombok.extern.slf4j.Slf4j;
 public class TurnoController {
 
     private final TurnoService turnoService;
+    @GetMapping
+    public ResponseEntity<?> obtenerTodosLosTurnos() {
+    try {
+            List<TurnoResponse> turnos = turnoService.obtenerTodosLosTurnos();
+            if (turnos.isEmpty()) {
+                return ResponseEntity.noContent().build(); // 204 No Content si no hay turnos
+            }
+            return ResponseEntity.ok(turnos); // 200 OK con los turnos
+        } catch (Exception e) {
+            // Loguear el error para depuración
+            System.err.println("Error al obtener turnos: " + e.getMessage());
+            return ResponseEntity.status(500).body("Error interno al obtener turnos: " + e.getMessage());
+        }}
 
     @GetMapping("/doctor/{doctorId}")
     public ResponseEntity<List<Turno>> obtenerTurnosPorDoctor(@PathVariable String doctorId) {

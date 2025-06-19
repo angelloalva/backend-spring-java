@@ -1,6 +1,8 @@
 package com.neuromotion.backend.security;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -37,11 +39,15 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
         String username = null;
         String jwt = null;
+        String usuarioId=null;
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             jwt = authorizationHeader.substring(7);
             try {
                 username = jwtUtil.extractUsername(jwt);
+         
+                usuarioId = jwtUtil.extractUsuarioId(jwt); // <-- extrae el usuarioId
+
             } catch (JwtException e) {
                 // Token inválido
             }
@@ -54,7 +60,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 UsernamePasswordAuthenticationToken authToken =
                     new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        // Aquí agregas el usuarioId como parte de los details
+                Map<String, Object> details = new HashMap<>();
+                details.put("usuarioId", usuarioId);
+                details.put("webDetails", new WebAuthenticationDetailsSource().buildDetails(request));
+                authToken.setDetails(details);
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }

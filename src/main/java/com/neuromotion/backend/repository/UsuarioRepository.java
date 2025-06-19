@@ -16,5 +16,6 @@ public interface UsuarioRepository extends MongoRepository<Usuario, String> {
     boolean existsByNumeroDocumento(String numeroDocumento);
     
     List<Usuario> findByNombresContainingIgnoreCaseAndRolesContaining(String nombres, Rol rol);
+    List<Usuario> findByRolesContaining(Rol rol);
 
 }

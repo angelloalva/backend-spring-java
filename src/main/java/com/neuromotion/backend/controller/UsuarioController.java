@@ -10,6 +10,7 @@ import com.neuromotion.backend.dto.RegistroDoctorRequest;
 import com.neuromotion.backend.dto.RegistroRequest;
 import com.neuromotion.backend.dto.UsuarioPasswordChangeRequest;
 import com.neuromotion.backend.dto.UsuarioUpdateRequest;
+import com.neuromotion.backend.enums.Rol;
 import com.neuromotion.backend.model.Usuario;
 import com.neuromotion.backend.repository.UsuarioRepository;
 import com.neuromotion.backend.service.UsuarioService;
@@ -63,5 +64,10 @@ public class UsuarioController {
                                          Authentication authentication) {
      return usuarioService.cambiarPassword(id, request, authentication);
 }
-  
+
+    @GetMapping("/pacientes")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<Usuario> listarPacientes() {
+        return usuarioRepository.findByRolesContaining(Rol.PACIENTE);
+    }
 }

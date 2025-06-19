@@ -96,6 +96,8 @@ public class UsuarioService {
 
     public ResponseEntity<?> crearUsuario(RegistroDoctorRequest request, Authentication authentication) {
         try {
+            logger.info("Request recibido para crear usuario: {}", request);
+
             logger.info("Intento de creación de usuario por: {}", authentication.getName());
             logger.info("Roles del creador: {}", authentication.getAuthorities());
 

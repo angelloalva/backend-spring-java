@@ -22,8 +22,8 @@ public class Cita {
     private String pacienteId;     // Referencia al paciente (puede ser ObjectId en String)
     private String doctorId;       // Referencia al doctor
     private String sedeId;         // Referencia a la sede donde se hará la cita
-    @JsonFormat(shape=JsonFormat.Shape.STRING,pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime  fechaHora;  // Fecha y hora de la cita
+@JsonFormat(shape=JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+private LocalDateTime fechaHora;
 
     private String turnoId;        // Opcional, si quieres referenciar el turno asignado
 

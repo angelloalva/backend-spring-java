@@ -30,14 +30,14 @@ public class RegistroRequest {
     @Email
     private String correo;
 
-    @NotBlank
-     @Size(min = 9, max = 9)
+
+    @Size(min = 9, max = 9)
     private String celular;
 
     @Size(min = 8,max=8, message = "La contraseña debe tener  8 caracteres")
     private String password;
 
-    @NotBlank
+
     private String direccion;
     private Set<Rol> roles = new HashSet<>();
     // Getters y setters

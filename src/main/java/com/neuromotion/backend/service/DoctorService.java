@@ -8,11 +8,13 @@ import com.neuromotion.backend.dto.DoctorResponse;
 import com.neuromotion.backend.dto.DoctorUpdateRequest;
 import com.neuromotion.backend.dto.EspecialidadValidationResponse;
 import com.neuromotion.backend.enums.Rol;
+import com.neuromotion.backend.model.Cita;
 import com.neuromotion.backend.model.Doctor;
 import com.neuromotion.backend.model.Especialidad;
 
 import com.neuromotion.backend.model.Turno;
 import com.neuromotion.backend.model.Usuario;
+import com.neuromotion.backend.repository.CitaRepository;
 import com.neuromotion.backend.repository.DoctorRepository;
 import com.neuromotion.backend.repository.UsuarioRepository;
 
@@ -21,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,7 +32,7 @@ public class DoctorService {
     
   
     private final DoctorRepository doctorRepository;
-    
+    private final CitaRepository citaRepository;
     private final TurnoService turnoService;
     private final UsuarioRepository usuarioRepository;
     
@@ -270,5 +273,21 @@ public class DoctorService {
         // No usar los turnos del doctor directamente, sino consultar al TurnoService
         // que tiene la información más actualizada
         return turnoService.obtenerTurnosPorDoctor(doctorId);
+    }
+
+    public List<Usuario> obtenerPacientesDeDoctor(String usuarioId) {
+        // Buscar todas las citas donde doctorId == usuarioId
+        List<Cita> citas = citaRepository.findByDoctorId(usuarioId);
+        if (citas.isEmpty()) {
+            return new ArrayList<>(); // Si no hay citas, retornar lista vacía      
+        }
+
+        Set<String> pacienteIds = citas.stream()
+            .map(Cita::getPacienteId)
+            .collect(Collectors.toSet());
+
+        return usuarioRepository.findAllById(pacienteIds).stream()
+            .filter(u -> u.getRoles().contains(Rol.PACIENTE))
+            .collect(Collectors.toList());
     }
 }

@@ -12,9 +12,16 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.neuromotion.backend.dto.TurnoResponse;
 import com.neuromotion.backend.enums.DiaSemana;
+import com.neuromotion.backend.model.Especialidad;
+import com.neuromotion.backend.model.Sede;
 import com.neuromotion.backend.model.Turno;
+import com.neuromotion.backend.model.Usuario;
+import com.neuromotion.backend.repository.EspecialidadRepository;
+import com.neuromotion.backend.repository.SedeRepository;
 import com.neuromotion.backend.repository.TurnoRepository;
+import com.neuromotion.backend.repository.UsuarioRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +30,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TurnoService {
 
-    private final TurnoRepository turnoRepository;
+   private final TurnoRepository turnoRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final SedeRepository sedeRepository;
+    private final EspecialidadRepository especialidadRepository;
 
  // ================= CREAR TURNO =================
     public Turno crearTurno(Turno nuevoTurno) {
@@ -47,6 +57,29 @@ public class TurnoService {
     }
     
     // ================= OBTENER TURNOS =================
+    public List<TurnoResponse> obtenerTodosLosTurnos() {
+       // Obtener todos los turnos
+        List<Turno> turnos = turnoRepository.findAll();
+
+        // Crear mapas para lookups eficientes
+        Map<String, Usuario> usuariosMap = usuarioRepository.findAll().stream()
+                .collect(Collectors.toMap(Usuario::getId, usuario -> usuario));
+        Map<String, Sede> sedesMap = sedeRepository.findAll().stream()
+                .collect(Collectors.toMap(Sede::getId, sede -> sede));
+        Map<String, Especialidad> especialidadesMap = especialidadRepository.findAll().stream()
+                .collect(Collectors.toMap(Especialidad::getId, especialidad -> especialidad));
+
+        // Cruzar los datos
+        return turnos.stream()
+                .map(turno -> {
+                    Usuario doctor = usuariosMap.getOrDefault(turno.getDoctorId(), new Usuario());
+                    Sede sede = sedesMap.getOrDefault(turno.getSedeId(), new Sede());
+                    Especialidad especialidad = especialidadesMap.getOrDefault(turno.getEspecialidadId(), new Especialidad());
+                    return TurnoResponse.fromTurno(turno, doctor, sede, especialidad);
+                })
+                .collect(Collectors.toList());
+    }
+
     public List<Turno> obtenerTurnosPorDoctor(String doctorId) {
         return turnoRepository.findByDoctorId(doctorId);
     }

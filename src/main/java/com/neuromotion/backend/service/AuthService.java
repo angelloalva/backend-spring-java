@@ -49,15 +49,16 @@ public class AuthService {
                     new UsernamePasswordAuthenticationToken(compositeKey, request.getPassword())
             );
 
-            // Generar token JWT
-            UserDetails userDetails = userDetailsService.loadUserByUsername(compositeKey);
-            String jwt = jwtUtil.generateToken(userDetails);
+           
 
             // Buscar el usuario en el repositorio
             Usuario usuario = usuarioRepository.findByTipoDocumentoAndNumeroDocumento(
                     request.getTipoDocumento(), request.getNumeroDocumento())
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
+            
+            // Generar token JWT
+            UserDetails userDetails = userDetailsService.loadUserByUsername(compositeKey);
+            String jwt = jwtUtil.generateToken(userDetails, usuario.getId());
             // Mapear datos del usuario a DTO
             UsuarioResponse usuarioDTO = new UsuarioResponse(
                     usuario.getId(),
