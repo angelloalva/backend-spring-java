@@ -14,10 +14,12 @@ import org.springframework.stereotype.Service;
 
 import com.neuromotion.backend.dto.TurnoResponse;
 import com.neuromotion.backend.enums.DiaSemana;
+import com.neuromotion.backend.model.Doctor;
 import com.neuromotion.backend.model.Especialidad;
 import com.neuromotion.backend.model.Sede;
 import com.neuromotion.backend.model.Turno;
 import com.neuromotion.backend.model.Usuario;
+import com.neuromotion.backend.repository.DoctorRepository;
 import com.neuromotion.backend.repository.EspecialidadRepository;
 import com.neuromotion.backend.repository.SedeRepository;
 import com.neuromotion.backend.repository.TurnoRepository;
@@ -34,7 +36,7 @@ public class TurnoService {
     private final UsuarioRepository usuarioRepository;
     private final SedeRepository sedeRepository;
     private final EspecialidadRepository especialidadRepository;
-
+    private final DoctorRepository doctorRepository;  
  // ================= CREAR TURNO =================
     public Turno crearTurno(Turno nuevoTurno) {
         if (nuevoTurno.getDoctorId() == null || nuevoTurno.getEspecialidadId() == null ||
@@ -68,14 +70,16 @@ public class TurnoService {
                 .collect(Collectors.toMap(Sede::getId, sede -> sede));
         Map<String, Especialidad> especialidadesMap = especialidadRepository.findAll().stream()
                 .collect(Collectors.toMap(Especialidad::getId, especialidad -> especialidad));
-
+        Map<String, Doctor> doctorMap = doctorRepository.findAll().stream()
+                .collect(Collectors.toMap(Doctor::getUsuarioId, sede -> sede));
         // Cruzar los datos
         return turnos.stream()
                 .map(turno -> {
                     Usuario doctor = usuariosMap.getOrDefault(turno.getDoctorId(), new Usuario());
                     Sede sede = sedesMap.getOrDefault(turno.getSedeId(), new Sede());
                     Especialidad especialidad = especialidadesMap.getOrDefault(turno.getEspecialidadId(), new Especialidad());
-                    return TurnoResponse.fromTurno(turno, doctor, sede, especialidad);
+                    Doctor doctorInfo = doctorMap.get(turno.getDoctorId());
+                    return TurnoResponse.fromTurno(turno, doctor, sede, especialidad,doctorInfo);
                 })
                 .collect(Collectors.toList());
     }

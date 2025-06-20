@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.neuromotion.backend.enums.DiaSemana;
+import com.neuromotion.backend.model.Doctor;
 import com.neuromotion.backend.model.Especialidad;
 import com.neuromotion.backend.model.Sede;
 import com.neuromotion.backend.model.Turno;
@@ -26,6 +27,7 @@ public class TurnoResponse {
     private String doctorId;
     private String doctorNombres;
     private String doctorApellidos;
+    private String doctorCmp;
     private String sedeNombre;
     private String especialidadNombre; // Opcional, si quieres incluir el nombre de la especialidad
     private List<DiaTurnoResponse> diasDisponibles;
@@ -51,7 +53,7 @@ public class TurnoResponse {
         private String citaId;
     }
 
-    public static TurnoResponse fromTurno(Turno turno, Usuario doctor, Sede sede,Especialidad especialidad) {
+    public static TurnoResponse fromTurno(Turno turno, Usuario doctor, Sede sede,Especialidad especialidad,Doctor doctorInfo) {
         return new TurnoResponse(
             turno.getId(),
             turno.getEspecialidadId(),
@@ -59,6 +61,7 @@ public class TurnoResponse {
             turno.getDoctorId(),
             doctor != null ? doctor.getNombres() : "Desconocido",
             doctor != null ? doctor.getApellidos() : "",
+            doctorInfo != null ? doctorInfo.getCmp() : "Sin CMP",
             sede != null ? sede.getNombre() : "Sin sede",
             especialidad != null ? especialidad.getNombre() : "Sin especialidad",
             turno.getDiasDisponibles().stream()
