@@ -8,7 +8,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import com.neuromotion.backend.enums.Rol;
-import com.neuromotion.backend.enums.TipoDocumento;
+
 
 import lombok.*;
 
@@ -35,4 +35,8 @@ public class Usuario {
 
     private String password;
     private Set<Rol> roles = new HashSet<>();
+
+    public String getUsername() {
+        return tipoDocumento + "-" + numeroDocumento;
+    }
 }

@@ -1,9 +1,12 @@
 package com.neuromotion.backend.service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
@@ -12,17 +15,21 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.neuromotion.backend.dto.AuthResponseDTO;
 import com.neuromotion.backend.dto.LoginRequest;
+import com.neuromotion.backend.dto.PerfilResponseDTO;
 import com.neuromotion.backend.dto.RegisterResponseDTO;
 import com.neuromotion.backend.dto.RegistroRequest;
+import com.neuromotion.backend.dto.UsuarioRequest;
 import com.neuromotion.backend.dto.UsuarioResponse;
 import com.neuromotion.backend.enums.Rol;
 import com.neuromotion.backend.enums.TipoDocumento;
 import com.neuromotion.backend.exceptions.CustomAuthException;
 import com.neuromotion.backend.model.Usuario;
 import com.neuromotion.backend.repository.UsuarioRepository;
+import com.neuromotion.backend.security.CustomUserDetails;
 import com.neuromotion.backend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 
@@ -42,7 +49,7 @@ public class AuthService {
             logger.info("Intento de login: tipo={}, numero={}",
                     request.getTipoDocumento(), request.getNumeroDocumento());
 
-            String compositeKey = request.getTipoDocumento() + "|" + request.getNumeroDocumento();
+            /*String compositeKey = request.getTipoDocumento() + "|" + request.getNumeroDocumento();
 
             // Autenticar al usuario
             authenticationManager.authenticate(
@@ -70,6 +77,26 @@ public class AuthService {
                     usuario.getTipoDocumento(),
                     usuario.getNumeroDocumento(),
                     usuario.getRoles()
+            );*/
+
+             // Autenticar con username compuesto
+            authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                    request.getUsername(), // tipoDocumento-numeroDocumento
+                    request.getPassword()
+                )
+            );
+            
+            CustomUserDetails userDetails = (CustomUserDetails) userDetailsService
+                .loadUserByUsername(request.getUsername());
+            
+            String jwt = jwtUtil.generateToken(userDetails);
+    
+            UsuarioResponse usuarioDTO = new UsuarioResponse(userDetails.getUsuarioId()
+                , userDetails.getTipoDocumento()
+                , userDetails.getNumeroDocumento()
+                , userDetails.getNombre()
+                , userDetails.getRoles()
             );
 
             logger.info("Login exitoso para {} {}", request.getTipoDocumento(), request.getNumeroDocumento());
@@ -83,6 +110,23 @@ public class AuthService {
             logger.error("Error en autenticación", e);
             throw new CustomAuthException("Error en autenticación: " + e.getMessage(), 500);
         }
+    }
+
+     public PerfilResponseDTO obtenerPerfilActual(String userId) {
+        Usuario usuario = usuarioRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
+        return new PerfilResponseDTO(
+                usuario.getId(),
+                usuario.getTipoDocumento(),
+                usuario.getNumeroDocumento(),
+                usuario.getNombres(),
+                usuario.getApellidos(),
+                usuario.getCelular(),
+                usuario.getCorreo(),
+                usuario.getDireccion(),
+                usuario.getRoles()
+        );
     }
 
     public RegisterResponseDTO register(RegistroRequest request) {
@@ -119,15 +163,15 @@ public class AuthService {
         usuarioRepository.save(nuevo);
 
         // Mapear datos del usuario a DTO
-        UsuarioResponse usuarioDTO = new UsuarioResponse(
-                nuevo.getId(),
+        UsuarioRequest usuarioDTO = new UsuarioRequest(
+                nuevo.getId(),nuevo.getTipoDocumento(),
+                nuevo.getNumeroDocumento(),
                 nuevo.getNombres(),
                 nuevo.getApellidos(),
                 nuevo.getCelular(),
                 nuevo.getCorreo(),
-                nuevo.getDireccion(),
-                nuevo.getTipoDocumento(),
-                nuevo.getNumeroDocumento(),nuevo.getRoles()
+                nuevo.getDireccion()
+                ,nuevo.getRoles()
         );
 
         logger.info("Usuario registrado correctamente: {}", request.getDocumentoNumero());

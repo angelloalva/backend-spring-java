@@ -1,5 +1,6 @@
 package com.neuromotion.backend.controller;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -7,31 +8,33 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.neuromotion.backend.dto.AuthResponseDTO;
 import com.neuromotion.backend.dto.ErrorResponseDTO;
 import com.neuromotion.backend.dto.LoginRequest;
+import com.neuromotion.backend.dto.PerfilResponseDTO;
 import com.neuromotion.backend.dto.RegisterResponseDTO;
 import com.neuromotion.backend.dto.RegistroRequest;
+import com.neuromotion.backend.dto.UsuarioResponse;
 import com.neuromotion.backend.enums.Rol;
-import com.neuromotion.backend.enums.TipoDocumento;
 import com.neuromotion.backend.exceptions.CustomAuthException;
 import com.neuromotion.backend.model.Usuario;
 import com.neuromotion.backend.repository.UsuarioRepository;
 import com.neuromotion.backend.service.AuthService;
-import com.neuromotion.backend.service.UsuarioDetailsService;
-import com.neuromotion.backend.util.JwtUtil;
-
-import jakarta.security.auth.message.AuthException;
+import com.neuromotion.backend.util.AuthenticationUtil;
+import com.neuromotion.backend.util.RoleUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -87,6 +90,17 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
+    }
+    @PreAuthorize("hasAnyRole('ADMIN', 'DOCTOR', 'PACIENTE')")
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser() {
+        String userId = AuthenticationUtil.getCurrentUsuarioId();
+
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no autenticado");
+        }       
+        PerfilResponseDTO perfil = authService.obtenerPerfilActual(userId);
+        return ResponseEntity.ok(perfil);
     }
 }
 

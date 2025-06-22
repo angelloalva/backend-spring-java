@@ -17,5 +17,20 @@ public interface UsuarioRepository extends MongoRepository<Usuario, String> {
     
     List<Usuario> findByNombresContainingIgnoreCaseAndRolesContaining(String nombres, Rol rol);
     List<Usuario> findByRolesContaining(Rol rol);
+     
+    
+    // Buscar por username compuesto (para compatibilidad)
+    default Optional<Usuario> findByUsername(String username) {
+        if (username == null || !username.contains("-")) {
+            return Optional.empty();
+        }
+        
+        String[] parts = username.split("-", 2);
+        if (parts.length != 2) {
+            return Optional.empty();
+        }
+        
+        return findByTipoDocumentoAndNumeroDocumento(parts[0], parts[1]);
+    }
 
 }

@@ -33,15 +33,12 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
             .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Permitir todas las peticiones OPTIONS
-                .requestMatchers("/auth/**").permitAll() // endpoints públicos (login, registro)
-                .requestMatchers(HttpMethod.GET, "/usuarios/**").hasAnyRole("ADMIN", "DOCTOR", "PACIENTE")
-                .requestMatchers(HttpMethod.POST, "/usuarios/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/usuarios/**").hasRole("ADMIN")  // para editar usuarios
-                 .requestMatchers(HttpMethod.GET, "/especialidades/**").hasAnyRole("ADMIN", "DOCTOR", "PACIENTE")
-                  .requestMatchers(HttpMethod.POST, "/especialidades/**").hasAnyRole("ADMIN", "DOCTOR")
-                  .requestMatchers(HttpMethod.GET, "/sedes/**").hasAnyRole("ADMIN", "DOCTOR", "PACIENTE")
-                  .requestMatchers(HttpMethod.POST, "/sedes/**").hasAnyRole("ADMIN")
-                  .requestMatchers(HttpMethod.POST, "/turnos/**").hasAnyRole("ADMIN", "DOCTOR")
+                .requestMatchers("/health", "/actuator/**").permitAll() // Health checks
+                .requestMatchers("/health", "/health/**").permitAll() // Health checks
+                .requestMatchers("/actuator/health", "/actuator/info").permitAll() // Actuator básico
+                .requestMatchers("/actuator/**").hasRole("ADMIN") // Otros actuator solo admin
+            .requestMatchers("/auth/**").permitAll() // endpoints públicos (login, registro)
+ 
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

@@ -5,9 +5,9 @@ import lombok.Data;
 @Data
 public class RegisterResponseDTO {
     private String message;
-    private UsuarioResponse user;
+    private UsuarioRequest user;
 
-    public RegisterResponseDTO(String message, UsuarioResponse user) {
+    public RegisterResponseDTO(String message, UsuarioRequest user) {
         this.message = message;
         this.user = user;
     }

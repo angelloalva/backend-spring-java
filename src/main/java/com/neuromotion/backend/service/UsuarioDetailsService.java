@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import com.neuromotion.backend.controller.AuthController;
 import com.neuromotion.backend.model.Usuario;
 import com.neuromotion.backend.repository.UsuarioRepository;
+import com.neuromotion.backend.security.CustomUserDetails;
 import com.neuromotion.backend.security.UsuarioDetails;
 
 import lombok.extern.slf4j.Slf4j;
@@ -27,8 +28,8 @@ public class UsuarioDetailsService implements UserDetailsService {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
-
-    @Override
+/*
+ *  @Override
     public UserDetails loadUserByUsername(String compositeKey) throws UsernameNotFoundException {
         // Separar tipoDocumento y numeroDocumento
         String[] parts = compositeKey.split("\\|");
@@ -46,5 +47,25 @@ public class UsuarioDetailsService implements UserDetailsService {
         // Crea el objeto UsuarioDetails
         return new UsuarioDetails(usuario);
    
+    }
+ * 
+ */
+   
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Usuario usuario = usuarioRepository.findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
+        
+        return new CustomUserDetails(usuario);
+    }
+    
+    // Método alternativo para buscar por tipo y número por separado
+    public UserDetails loadUserByDocumento(String tipoDocumento, String numeroDocumento) 
+            throws UsernameNotFoundException {
+        Usuario usuario = usuarioRepository.findByTipoDocumentoAndNumeroDocumento(tipoDocumento, numeroDocumento)
+            .orElseThrow(() -> new UsernameNotFoundException(
+                "Usuario no encontrado con documento: " + tipoDocumento + "-" + numeroDocumento));
+        
+        return new CustomUserDetails(usuario);
     }
 }

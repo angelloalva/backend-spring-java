@@ -12,4 +12,8 @@ public class LoginRequest {
     @NotBlank(message = "La contraseña es obligatoria")
     @Size(min = 6, message = "La contraseña debe tener al menos 8 caracteres")
     private String password;
+
+     public String getUsername() {
+        return tipoDocumento + "-" + numeroDocumento;
+    }
 }

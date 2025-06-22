@@ -33,7 +33,7 @@ public class SecurityUtils {
     }
     
     public boolean esAdmin(Authentication authentication) {
-        return authentication.getAuthorities().stream()
-            .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
+           return authentication.getAuthorities().stream()
+        .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
     }
 }
