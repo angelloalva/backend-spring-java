@@ -4,7 +4,7 @@ RUN adduser --system spring
 
 WORKDIR /app
 
-COPY build/libs/backend-0.0.1-SNAPSHOT.jar app.jar
+COPY build/libs/ms-autenticacion-0.0.1-SNAPSHOT.jar app.jar
 
 USER spring
 
